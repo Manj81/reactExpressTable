@@ -72,39 +72,40 @@ function App() {
 
   }
 
-  // Populate Post
-  ////////////////////////////////////////// 
-  const populatePost = (key, fullName, address) => {
-    setUpdateID(key);
-    setUpdateFullname(fullName);
-    setUpdateAddress(address);
-  }
-
-  // Update Post 
-  //////////////////////////////////////////
-  const updatePost = () => {
-    // populate post info from temp state and prepare new object for changed post
-    let editedPost = {
-      "id": updateID,
-      "fullName": updateFullname,
-      "address": updateAddress
-    }
-    // remove old post with same ID and get the remaining data /// filter 
-    let filterPost = [...data].filter(OBJ=>OBJ.id!==updateID);
-    // prepare object with edited post + remaining data from object above
-    let posts = [...filterPost, editedPost];
-    // push int state
-    setData(posts);
-
+  const onchangeName = (i,name) => {
+    data[i]["fullName"]=name;
+    let editData = [...data];
+    setData(editData);
     setUpdateID();
     setUpdateFullname();
-    setUpdateAddress();
-
-    // update write to json file
-    saveJson(posts);
-
+    setUpdateAddress();    
   }
-  
+
+  const onchangeAddress = (i,Add) => {
+    data[i]["address"]= Add;
+    let editData = [...data];
+    setData(editData);
+    setUpdateID();
+    setUpdateFullname();
+    setUpdateAddress();    
+  }
+
+
+  const enableEdit = (e,id) => {
+    document.getElementById('Name_'+id).readOnly=false 
+    document.getElementById('Add_'+id).readOnly=false 
+    document.getElementById('Name_'+id).style.pointerEvents = "visible"
+    document.getElementById('Add_'+id).style.pointerEvents = "visible"
+    document.getElementById('Name_'+id).style.border = "2px solid blue";
+    document.getElementById('Add_'+id).style.border = "2px solid blue";
+   console.log(e);   
+  }
+    
+
+  const CancelChanges = () => {
+    window.location.reload();   
+  }
+
   
   // Write to JSON File
   //////////////////////////////////////////
@@ -116,12 +117,13 @@ function App() {
     .then(response => {
       // console.log(response);
     });
+    window.location.reload();
   }
 
   // Bonus Section
   //////////////////////////////////////////
   // Downloading JSON File
-  const saveData = jsonDate => {
+  const downLoadData = jsonDate => {
     const fileData = JSON.stringify(jsonDate);
 
     const blob = new Blob([fileData], {type: "text/plain"});
@@ -137,66 +139,56 @@ function App() {
 
 
 
+
   return (
     <div className="App">
 
-      <div>
+      <div id= "addpost">
         <h4>Add New Post</h4>
-          <form>
-          <input placeholder="Fullname" 
-            onChange={ e => setFullname( e.target.value ) } 
-            value={ fullName || '' } 
+          
+          <input 
+           type = "text" 
+           placeholder = "FullName"
+           
+           onChange={ e => setFullname( e.target.value ) } 
+           value={ fullName || '' } 
             ref={ fullNameRef }
           />
           
           <input 
-            placeholder="Address"
+            type = "text"
+            placeholder = "Address"
             onChange={ e => setAddress( e.target.value ) } 
             value={ address || '' } 
             ref={ addressRef }
           />
           
           <button onClick={ addPost }>Add Post</button>
-       </form>
+      
       </div>
 
       
 
-      { updateFullname || updateAddress ? 
-        (
-          <div>
-            <h4>Update Post</h4>
-            <input placeholder="Fullname" 
-              onChange={ e => setUpdateFullname( e.target.value ) } 
-              value={ updateFullname } 
-            />
-            
-            <input
-              placeholder="Address"
-              onChange={ e => setUpdateAddress( e.target.value ) } 
-               value={ updateAddress } 
-            />
-            
-            <button onClick={ updatePost }>Save</button>
-          </div>
-        ) : null }
-
       <div className="posts">
-        { data ? data.map(post => {
+        { data ? data.map((post,i) => {
           return(
-            <div key={ post.id } className="post">
-              
-              <input value= { post.fullName }/>
-              <input value= { post.address }/>
-              <button onClick={ () => populatePost(post.id, post.fullName, post.address) }>Edit</button>
-              <button onClick={ () => deletePost(post.id) }>Delete</button>
-              
+            <div key={ post.id } className="post">              
+              <input  id = {"Name_" + post.id }  value= { post.fullName } onChange={(e) =>onchangeName(i, e.target.value)}readOnly />
+              <input  id = {"Add_" + post.id }  value= { post.address } onChange={(e) =>onchangeAddress(i, e.target.value)}readOnly/>
+              <button onClick={ (e) => enableEdit(e,post.id) } >Edit</button>
+              <button onClick={ () => deletePost(post.id) } >Delete</button>              
             </div>
           )
         }) : null }
         <div className="btn-download">
-          <button onClick={ e => saveData(data) }>Download Data</button>
-        </div>
+         <table>
+           <tr>
+             <td><button onClick={ e => saveJson(data) } className="button" >Save Data</button> </td>
+             <td><button onClick={ e => CancelChanges(data) } >Cancel</button> </td>
+             <rd> <button onClick={ e => downLoadData(data) }>Download Data</button></rd>
+           </tr>
+         </table>           
+        </div>       
       </div>
     </div>
   );
